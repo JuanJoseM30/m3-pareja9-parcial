@@ -40,16 +40,16 @@ async function findByCodigo(codigo) {
 
 async function create(curso) {
   const [resultado] = await pool.query(
-    'INSERT INTO cursos (codigo, nombre, creditos, cupo, semestre) VALUES (?, ?, ?, ?, ?)',
-    [curso.codigo, curso.nombre, curso.creditos, curso.cupo, curso.semestre]
+    'INSERT INTO cursos (codigo, nombre, creditos, cupo, semestre, programa_id) VALUES (?, ?, ?, ?, ?, ?)',
+    [curso.codigo, curso.nombre, curso.creditos, curso.cupo, curso.semestre, curso.programa_id]
   );
   return findById(resultado.insertId);
 }
 
 async function update(id, curso) {
   const [resultado] = await pool.query(
-    'UPDATE cursos SET codigo = ?, nombre = ?, creditos = ?, cupo = ?, semestre = ? WHERE id = ?',
-    [curso.codigo, curso.nombre, curso.creditos, curso.cupo, curso.semestre, id]
+    'UPDATE cursos SET codigo = ?, nombre = ?, creditos = ?, cupo = ?, semestre = ?, programa_id = ? WHERE id = ?',
+    [curso.codigo, curso.nombre, curso.creditos, curso.cupo, curso.semestre, curso.programa_id, id]
   );
   if (resultado.affectedRows === 0) return null;
   return findById(id);

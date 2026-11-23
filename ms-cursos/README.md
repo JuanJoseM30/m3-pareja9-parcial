@@ -43,7 +43,7 @@ Cada petición queda registrada en la terminal con su método, ruta y código de
 ## Representación
 
 ```json
-{ "id": 1, "codigo": "RSM-101", "nombre": "Redes y Servicios Multimedia", "creditos": 3, "cupo": 30, "semestre": "2026-2" }
+{ "id": 1, "codigo": "RSM-101", "nombre": "Redes y Servicios Multimedia", "creditos": 3, "cupo": 30, "semestre": "2026-2", "programa_id": 1 }
 ```
 
 ## Atributos
@@ -56,6 +56,7 @@ Cada petición queda registrada en la terminal con su método, ruta y código de
 | creditos | entero | Sí, entre 1 y 6 |
 | cupo | entero | Sí, mayor que 0 |
 | semestre | texto | Sí, formato `AAAA-1` o `AAAA-2` |
+| programa_id | entero | Sí, entero positivo (referencia al programa) |
 
 ## Endpoints
 
@@ -74,7 +75,7 @@ Todos los endpoints pueden responder además **401** y **403** (ver Seguridad).
 ## Ejemplo para crear
 
 ```json
-{ "codigo": "SIS-301", "nombre": "Sistemas Operativos", "creditos": 4, "cupo": 20, "semestre": "2027-1" }
+{ "codigo": "SIS-301", "nombre": "Sistemas Operativos", "creditos": 4, "cupo": 20, "semestre": "2027-1", "programa_id": 1 }
 ```
 
 ## Errores
