@@ -5,48 +5,97 @@
 // =====================================================================
 const repo = require('../repositories/curso.repository');
 const { validarCurso, construirCurso } = require('../models/curso');
+const { obtenerPrograma, obtenerProgramasPorIds } = require('../clients/programas.client');
 const HttpError = require('../utils/http-error');
 
-async function listar(filtros) {
-  return repo.findAll(filtros);
+function formatearPrograma(p) {
+  if (!p) return null;
+  return {
+    id: p.id,
+    nombre_programa: p.nombre_programa,
+    facultad: p.facultad,
+  };
 }
 
-async function obtener(id) {
+async function componer(cursos, auth) {
+  const ids = [...new Set(cursos.map((c) => c.programa_id))];
+  if (ids.length === 0) return cursos;
+
+  const lista = await obtenerProgramasPorIds(ids, auth);
+  if (!lista) {
+    return cursos.map((c) => ({
+      ...c,
+      programa: null,
+      aviso: 'El proveedor ms-programas no responde',
+    }));
+  }
+
+  const porId = new Map(lista.map((p) => [p.id, formatearPrograma(p)]));
+  return cursos.map((c) => ({
+    ...c,
+    programa: porId.get(c.programa_id) || null,
+  }));
+}
+
+async function listar(filtros, auth) {
+  const cursos = await repo.findAll(filtros);
+  return componer(cursos, auth);
+}
+
+async function obtener(id, auth) {
   const curso = await repo.findById(id);
   if (!curso) throw new HttpError(404, `No existe el curso con id ${id}`);
-  return curso;
+  const [compuesto] = await componer([curso], auth);
+  return compuesto;
 }
 
-async function crear(datos) {
+async function crear(datos, auth) {
   const errores = validarCurso(datos);
   if (errores.length > 0) throw new HttpError(400, 'Datos inválidos', errores);
 
   const curso = construirCurso(datos);
 
-  // Regla de negocio (409): no puede haber dos cursos con el mismo codigo
   if (await repo.findByCodigo(curso.codigo)) {
     throw new HttpError(409, `Ya existe un curso con el codigo ${curso.codigo}`);
   }
 
-  return repo.create(curso);
+  const programa = await obtenerPrograma(curso.programa_id, auth);
+  if (curso.creditos > programa.creditos_max_curso) {
+    throw new HttpError(
+      400,
+      `Los creditos del curso (${curso.creditos}) superan el máximo permitido por el programa (${programa.creditos_max_curso})`
+    );
+  }
+
+  const creado = await repo.create(curso);
+  return { ...creado, programa: formatearPrograma(programa) };
 }
 
-async function actualizar(id, datos) {
+async function actualizar(id, datos, auth) {
   const errores = validarCurso(datos);
   if (errores.length > 0) throw new HttpError(400, 'Datos inválidos', errores);
 
   const curso = construirCurso(datos);
 
-  // 404 primero: si el curso no existe, no tiene sentido revisar el codigo
-  if (!(await repo.findById(id))) throw new HttpError(404, `No existe el curso con id ${id}`);
+  if (!(await repo.findById(id))) {
+    throw new HttpError(404, `No existe el curso con id ${id}`);
+  }
 
-  // Regla de negocio (409): el codigo no puede pertenecer a OTRO curso
   const otro = await repo.findByCodigo(curso.codigo);
   if (otro && otro.id !== id) {
     throw new HttpError(409, `Ya existe otro curso con el codigo ${curso.codigo}`);
   }
 
-  return repo.update(id, curso);
+  const programa = await obtenerPrograma(curso.programa_id, auth);
+  if (curso.creditos > programa.creditos_max_curso) {
+    throw new HttpError(
+      400,
+      `Los creditos del curso (${curso.creditos}) superan el máximo permitido por el programa (${programa.creditos_max_curso})`
+    );
+  }
+
+  const actualizado = await repo.update(id, curso);
+  return { ...actualizado, programa: formatearPrograma(programa) };
 }
 
 async function eliminar(id) {

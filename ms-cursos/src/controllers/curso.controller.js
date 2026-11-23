@@ -12,7 +12,6 @@ function leerId(req) {
   return id;
 }
 
-// GET /cursos   ·   GET /cursos?semestre=2026-2   ·   GET /cursos?ids=1,3
 async function listar(req, res) {
   const filtros = { semestre: req.query.semestre };
   if (req.query.ids) {
@@ -22,29 +21,25 @@ async function listar(req, res) {
     }
     filtros.ids = ids;
   }
-  const cursos = await cursoService.listar(filtros);
+  const cursos = await cursoService.listar(filtros, req.headers.authorization);
   return res.status(200).json(cursos);
 }
 
-// GET /cursos/:id
 async function obtener(req, res) {
-  const curso = await cursoService.obtener(leerId(req));
+  const curso = await cursoService.obtener(leerId(req), req.headers.authorization);
   return res.status(200).json(curso);
 }
 
-// POST /cursos
 async function crear(req, res) {
-  const nuevo = await cursoService.crear(req.body);
+  const nuevo = await cursoService.crear(req.body, req.headers.authorization);
   return res.status(201).location(`${req.baseUrl}/${nuevo.id}`).json(nuevo);
 }
 
-// PUT /cursos/:id
 async function actualizar(req, res) {
-  const actualizado = await cursoService.actualizar(leerId(req), req.body);
+  const actualizado = await cursoService.actualizar(leerId(req), req.body, req.headers.authorization);
   return res.status(200).json(actualizado);
 }
 
-// DELETE /cursos/:id
 async function eliminar(req, res) {
   await cursoService.eliminar(leerId(req));
   return res.status(204).end();
