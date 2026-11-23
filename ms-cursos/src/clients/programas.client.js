@@ -5,7 +5,7 @@
 // la validación, la regla de negocio y la composición.
 // En el .env de ms-cursos:  PROGRAMAS_URL=http://127.0.0.1:3012
 // =====================================================================
-const HttpError = require('../utils/http-error');
+const HttpError = require('../../../ms-programas/src/utils/http-error');
 const PROGRAMAS_URL = process.env.PROGRAMAS_URL;
 
 async function pedir(ruta, token) {
